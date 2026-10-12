@@ -1,0 +1,19 @@
+server:
+  port: 8080
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/lan_monitor?connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true&rewriteBatchedStatements=true}
+    username: ${DB_USER:monitor}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 10
+  mvc:
+    async:
+      request-timeout: 0
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+monitor:
+  token: ${AGENT_TOKEN}

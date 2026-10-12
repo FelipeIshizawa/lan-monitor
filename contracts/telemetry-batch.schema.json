@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TelemetryBatch",
+  "type": "object",
+  "required": ["agentId", "segment", "batchId", "samples"],
+  "properties": {
+    "agentId": {"type":"string", "pattern":"^[a-zA-Z0-9_-]{1,100}$"},
+    "segment": {"type":"string", "pattern":"^[a-zA-Z0-9_-]{1,100}$"},
+    "batchId": {"type":"string", "format":"uuid"},
+    "samples": {"type":"array", "maxItems":1000, "items":{
+      "type":"object",
+      "required":["mac","ip","observedAt","probeKind","resultCode","latencyUs"],
+      "properties":{
+        "mac":{"type":"string","pattern":"^([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}$"},
+        "ip":{"type":"string","description":"Numeric IPv4 or IPv6 address"},
+        "hostname":{"type":["string","null"],"maxLength":253},
+        "observedAt":{"type":"string","format":"date-time"},
+        "probeKind":{"enum":["ICMP","DNS"]},
+        "resultCode":{"enum":["OK","TIMEOUT","ERROR"]},
+        "latencyUs":{"type":["integer","null"],"minimum":0},
+        "reachable":{"type":["boolean","null"]}
+      }
+    }}
+  }
+}

@@ -1,0 +1,28 @@
+name: CI
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  agent:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m unittest discover -s agent/tests -v
+        env: {PYTHONPATH: agent/src}
+      - run: python -m compileall -q agent/src scripts benchmarks
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: cp .env.example .env
+      - run: docker compose config --quiet
+      - run: docker compose up -d --build
+      - run: python scripts/smoke.py
+        env:
+          AGENT_TOKEN: replace-with-at-least-24-random-characters
+      - if: always()
+        run: docker compose logs --no-color
+      - if: always()
+        run: docker compose down -v

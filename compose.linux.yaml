@@ -1,0 +1,11 @@
+services:
+  agent:
+    network_mode: host
+    cap_drop: [ALL]
+    cap_add: [NET_RAW]
+    environment:
+      AGENT_MODE: raw
+      BACKEND_URL: http://127.0.0.1:8080
+      LAN_INTERFACE: ${LAN_INTERFACE:-eth0}
+      LAN_CIDR: ${LAN_CIDR:-192.168.1.0/24}
+      DNS_RESOLVER: ${DNS_RESOLVER:-192.168.1.1}

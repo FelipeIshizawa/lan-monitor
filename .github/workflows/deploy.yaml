@@ -1,0 +1,34 @@
+name: Deploy to configured Linux host
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: lan-monitor-production
+  cancel-in-progress: false
+jobs:
+  deploy:
+    environment: production
+    runs-on: [self-hosted, linux, lan-monitor]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Write runtime configuration
+        env:
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_ROOT_PASSWORD: ${{ secrets.DB_ROOT_PASSWORD }}
+          AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          keys = ('DB_PASSWORD', 'DB_ROOT_PASSWORD', 'AGENT_TOKEN')
+          values = {k: os.environ[k] for k in keys}
+          if any(not v or any(c in v for c in '\n\r\x00') for v in values.values()):
+              raise ValueError('Missing or invalid secret')
+          os.umask(0o077)
+          Path('.env').write_text(''.join(k + "='" + v.replace("'", "\\'") + "'\n" for k,v in values.items()))
+          PY
+      - run: docker compose -p lan-monitor up -d --build
+      - run: python3 scripts/smoke.py
+        env:
+          AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}

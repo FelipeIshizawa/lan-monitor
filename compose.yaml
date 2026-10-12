@@ -1,0 +1,46 @@
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: lan_monitor
+      MYSQL_USER: monitor
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Configure DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?Configure DB_ROOT_PASSWORD}
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./infra/mysql/my.cnf:/etc/mysql/conf.d/monitor.cnf:ro
+    healthcheck:
+      test: ["CMD-SHELL", "MYSQL_PWD=$$MYSQL_PASSWORD mysql -h 127.0.0.1 -u monitor -D lan_monitor -e 'SELECT 1'"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+  backend:
+    build: ./backend
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/lan_monitor?connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true&rewriteBatchedStatements=true
+      DB_PASSWORD: ${DB_PASSWORD}
+      AGENT_TOKEN: ${AGENT_TOKEN:?Configure AGENT_TOKEN}
+    ports: ["127.0.0.1:8080:8080"]
+    depends_on:
+      mysql: {condition: service_healthy}
+    restart: unless-stopped
+  dashboard:
+    build: ./dashboard
+    ports: ["127.0.0.1:3000:80"]
+    depends_on: [backend]
+    restart: unless-stopped
+  agent:
+    build: ./agent
+    environment:
+      AGENT_TOKEN: ${AGENT_TOKEN}
+      AGENT_MODE: synthetic
+      BACKEND_URL: http://backend:8080
+      AGENT_ID: agent-1
+      LAN_SEGMENT: default
+    volumes: ["agent-data:/data"]
+    depends_on: [backend]
+    restart: unless-stopped
+volumes:
+  mysql-data:
+  agent-data:

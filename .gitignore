@@ -1,0 +1,9 @@
+.env
+node_modules/
+dist/
+target/
+__pycache__/
+*.sqlite*
+.venv/
+benchmarks/results/*.json
+.setup/
