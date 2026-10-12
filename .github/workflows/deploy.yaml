@@ -11,7 +11,7 @@ jobs:
     environment: production
     runs-on: [self-hosted, linux, lan-monitor]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Write runtime configuration
         env:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
